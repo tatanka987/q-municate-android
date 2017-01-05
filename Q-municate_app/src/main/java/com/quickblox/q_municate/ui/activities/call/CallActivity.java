@@ -397,9 +397,15 @@ public class CallActivity extends BaseLoggableActivity implements QBRTCClientSes
     }
 
     public User getOpponentAsUserFromDB(int opponentId){
+        User result = null;
         DataManager dataManager = DataManager.getInstance();
         Friend friend = dataManager.getFriendDataManager().getByUserId(opponentId);
-        return friend.getUser();
+        if(friend != null){
+            result = friend.getUser();
+        } else{
+            result = dataManager.getUserDataManager().get(opponentId);
+        }
+        return result;
     }
 
     private void processCurrentWifiState(Context context) {
