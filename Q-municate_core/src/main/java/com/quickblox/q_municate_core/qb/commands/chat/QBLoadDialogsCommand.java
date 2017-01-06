@@ -21,6 +21,9 @@ import com.quickblox.q_municate_core.utils.ConstsCore;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -106,7 +109,7 @@ public class QBLoadDialogsCommand extends ServiceCommand {
         return needToLoadMore;
     }
 
-    private List<QBDialog> loadAllDialogs(Bundle returnedBundle, QBRequestGetBuilder qbRequestGetBuilder) throws QBResponseException {
+    private List<QBDialog> loadAllDialogs(final Bundle returnedBundle, final QBRequestGetBuilder qbRequestGetBuilder) throws QBResponseException {
         List<QBDialog> allDialogsList = null;
         List<QBDialog> allDialogsListPrivate = new ArrayList<>();
         List<QBDialog> allDialogsListGroup = new ArrayList<>();
@@ -127,12 +130,61 @@ public class QBLoadDialogsCommand extends ServiceCommand {
         qbRequestGetBuilderGroup.addRule(FIELD_DIALOG_TYPE, OPERATOR_EQ, QBDialogType.GROUP.getCode());
 
         do {
+            Future<Boolean> future1 = null;
+            Future<Boolean> future2 = null;
+
             if(needToLoadMorePrivate) {
-                needToLoadMorePrivate = loadAllDialogsByType(QBDialogType.PRIVATE, returnedBundle, qbRequestGetBuilderPrivate, allDialogsListPrivate, pageNumber);
+                Callable<Boolean> callable1 = new Callable<Boolean>() {
+                    private List<QBDialog> allDialogsListPrivate;
+                    private int pageNumber;
+
+                    public Callable<Boolean> init(List<QBDialog> allDialogsListPrivate, int pageNumber){
+                        this.allDialogsListPrivate = allDialogsListPrivate;
+                        this.pageNumber = pageNumber;
+                        return this;
+                    }
+
+                    @Override
+                    public Boolean call() throws Exception {
+                        return loadAllDialogsByType(QBDialogType.PRIVATE, returnedBundle, qbRequestGetBuilderPrivate, allDialogsListPrivate, pageNumber);
+                    }
+                }.init(allDialogsListPrivate, pageNumber);
+
+               future1 = threadPool.submit(callable1);
             }
 
             if(needToLoadMoreGroup) {
-                needToLoadMoreGroup = loadAllDialogsByType(QBDialogType.GROUP, returnedBundle, qbRequestGetBuilderGroup, allDialogsListGroup, pageNumber);
+
+                Callable<Boolean> callable2 = new Callable<Boolean>() {
+                    private List<QBDialog> allDialogsListGroup;
+                    private int pageNumber;
+
+                    public Callable<Boolean> init(List<QBDialog> allDialogsListGroup, int pageNumber){
+                        this.allDialogsListGroup = allDialogsListGroup;
+                        this.pageNumber = pageNumber;
+                        return this;
+                    }
+
+                    @Override
+                    public Boolean call() throws Exception {
+                        return loadAllDialogsByType(QBDialogType.GROUP, returnedBundle, qbRequestGetBuilderGroup, allDialogsListGroup, pageNumber);
+                    }
+                }.init(allDialogsListGroup, pageNumber);
+
+                future2 = threadPool.submit(callable2);
+            }
+
+            try {
+                if(needToLoadMorePrivate) {
+                    needToLoadMorePrivate = future1.get();
+                }
+                if(needToLoadMoreGroup) {
+                    needToLoadMoreGroup = future2.get();
+                }
+            } catch (InterruptedException e) {
+                Log.d("QBLoadDialogsCommand", e.getMessage());
+            } catch (ExecutionException e) {
+                Log.d("QBLoadDialogsCommand", e.getMessage());
             }
 
             pageNumber++;
