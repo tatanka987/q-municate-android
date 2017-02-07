@@ -9,6 +9,7 @@ import com.digits.sdk.android.Digits;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.quickblox.auth.session.QBSettings;
 import com.quickblox.chat.QBChatService;
+import com.quickblox.core.ServiceZone;
 import com.quickblox.q_municate.utils.StringObfuscator;
 import com.quickblox.q_municate.utils.image.ImageLoaderUtils;
 import com.quickblox.q_municate.utils.ActivityLifecycleHandler;
@@ -27,6 +28,10 @@ public class App extends MultiDexApplication {
 
     private static App instance;
     private SharedHelper appSharedHelper;
+
+    private final static String API_DOMAIN = "https://apistage1.quickblox.com";
+    private final static String CHAT_DOMAIN = "chatstage1.quickblox.com";
+
 
     public static App getInstance() {
         return instance;
@@ -71,6 +76,9 @@ public class App extends MultiDexApplication {
                 StringObfuscator.getAuthKey(),
                 StringObfuscator.getAuthSecret());
         QBSettings.getInstance().setAccountKey(StringObfuscator.getAccountKey());
+
+        QBSettings.getInstance().setEndpoints(API_DOMAIN, CHAT_DOMAIN, ServiceZone.PRODUCTION);
+        QBSettings.getInstance().setZone(ServiceZone.PRODUCTION);
 
         QBChatService.ConfigurationBuilder configurationBuilder = new QBChatService.ConfigurationBuilder();
         configurationBuilder.setAutojoinEnabled(true);
