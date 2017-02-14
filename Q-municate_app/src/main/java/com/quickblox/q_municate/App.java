@@ -74,9 +74,10 @@ public class App extends MultiDexApplication {
                 StringObfuscator.getApplicationId(),
                 StringObfuscator.getAuthKey(),
                 StringObfuscator.getAuthSecret());
-        QBSettings.getInstance().setAccountKey(StringObfuscator.getAccountKey());
+        QBSettings.getInstance().setAccountKey("");
 
         QBSettings.getInstance().setEndpoints(API_DOMAIN, CHAT_DOMAIN, ServiceZone.PRODUCTION);
+        QBSettings.getInstance().setZone(ServiceZone.PRODUCTION);
 
         QBChatService.ConfigurationBuilder configurationBuilder = new QBChatService.ConfigurationBuilder();
         configurationBuilder.setAutojoinEnabled(true);
