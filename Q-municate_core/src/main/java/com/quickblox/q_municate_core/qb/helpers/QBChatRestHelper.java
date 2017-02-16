@@ -10,6 +10,7 @@ import com.quickblox.core.exception.QBResponseException;
 import com.quickblox.core.helper.Lo;
 import com.quickblox.q_municate_core.utils.ConstsCore;
 import com.quickblox.q_municate_core.utils.helpers.CoreSharedHelper;
+import com.quickblox.q_municate_user_service.QMUserService;
 import com.quickblox.users.model.QBUser;
 
 import org.jivesoftware.smack.ConnectionListener;
@@ -68,15 +69,15 @@ public class QBChatRestHelper extends BaseHelper {
     }
 
     private void updateSessionAndLoginChatSocial(QBUser user) throws IOException, XMPPException, SmackException {
-        QBSession currentSession = QBAuth.getSession().perform();
-        updateLocalUserIfNeed(currentSession);
-        user.setPassword(currentSession.getToken());
+        QMUserService.getInstance().getUser(user.getId());
+        updateLocalUserIfNeed(QBSessionManager.getInstance().getToken());
+        user.setPassword(QBSessionManager.getInstance().getToken());
         login(user);
     }
 
-    private void updateLocalUserIfNeed(QBSession currentRestSession){
+    private void updateLocalUserIfNeed(String token){
         if (QBSessionManager.getInstance().getSessionParameters().getSocialProvider() != null) {
-            CoreSharedHelper.getInstance().saveUserPassword(currentRestSession.getToken());
+            CoreSharedHelper.getInstance().saveUserPassword(token);
         }
     }
 
