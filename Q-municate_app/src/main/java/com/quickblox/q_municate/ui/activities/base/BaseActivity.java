@@ -27,13 +27,12 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.ProgressBar;
 
-import com.facebook.AccessToken;
-import com.quickblox.auth.model.QBProvider;
 import com.quickblox.chat.QBChatService;
 import com.quickblox.chat.model.QBChatDialog;
 import com.quickblox.chat.model.QBDialogType;
 import com.quickblox.q_municate.App;
 import com.quickblox.q_municate.R;
+import com.quickblox.q_municate_db.managers.DataManager;
 import com.quickblox.q_municate.ui.activities.authorization.LandingActivity;
 import com.quickblox.q_municate.ui.activities.authorization.SplashActivity;
 import com.quickblox.q_municate.ui.activities.call.CallActivity;
@@ -49,26 +48,19 @@ import com.quickblox.q_municate.utils.broadcasts.NetworkChangeReceiver;
 import com.quickblox.q_municate.utils.helpers.ActivityUIHelper;
 import com.quickblox.q_municate.utils.helpers.LoginHelper;
 import com.quickblox.q_municate.utils.helpers.SharedHelper;
-import com.quickblox.q_municate.utils.helpers.TwitterDigitsHelper;
 import com.quickblox.q_municate.utils.helpers.notification.NotificationManagerHelper;
 import com.quickblox.q_municate.utils.listeners.ServiceConnectionListener;
 import com.quickblox.q_municate.utils.listeners.UserStatusChangingListener;
 import com.quickblox.q_municate_core.core.command.Command;
 import com.quickblox.q_municate_core.models.AppSession;
-import com.quickblox.q_municate_core.models.LoginType;
 import com.quickblox.q_municate_core.qb.commands.chat.QBInitCallChatCommand;
 import com.quickblox.q_municate_core.qb.commands.chat.QBLoadDialogsCommand;
 import com.quickblox.q_municate_core.qb.commands.chat.QBLoginChatCompositeCommand;
-import com.quickblox.q_municate_core.qb.commands.rest.QBLoginRestCommand;
-import com.quickblox.q_municate_core.qb.commands.rest.QBSocialLoginCommand;
 import com.quickblox.q_municate_core.qb.helpers.QBChatHelper;
 import com.quickblox.q_municate_core.qb.helpers.QBFriendListHelper;
 import com.quickblox.q_municate_core.service.QBService;
 import com.quickblox.q_municate_core.service.QBServiceConsts;
-import com.quickblox.q_municate_core.utils.ChatUtils;
 import com.quickblox.q_municate_core.utils.ConnectivityUtils;
-import com.quickblox.q_municate_db.managers.DataManager;
-import com.quickblox.q_municate_db.models.Dialog;
 import com.quickblox.q_municate_db.utils.ErrorUtils;
 import com.quickblox.q_municate_user_service.QMUserService;
 import com.quickblox.q_municate_user_service.model.QMUser;
@@ -429,6 +421,7 @@ public abstract class BaseActivity extends AppCompatActivity implements ActionBa
     }
 
     private void registerBroadcastReceivers() {
+        Log.v(TAG, "registerBroadcastReceivers()");
         IntentFilter globalActionsIntentFilter = new IntentFilter();
         globalActionsIntentFilter.addAction(QBServiceConsts.GOT_CHAT_MESSAGE_LOCAL);
         globalActionsIntentFilter.addAction(QBServiceConsts.GOT_CONTACT_REQUEST);
@@ -450,6 +443,7 @@ public abstract class BaseActivity extends AppCompatActivity implements ActionBa
     }
 
     private void addActions() {
+        Log.v(TAG, "addActions()");
         addAction(QBServiceConsts.LOGIN_REST_SUCCESS_ACTION, successAction);
         addAction(QBServiceConsts.LOGIN_CHAT_COMPOSITE_SUCCESS_ACTION, new LoginChatCompositeSuccessAction());
         addAction(QBServiceConsts.LOAD_CHATS_DIALOGS_SUCCESS_ACTION, new LoadChatsSuccessAction());
@@ -530,29 +524,6 @@ public abstract class BaseActivity extends AppCompatActivity implements ActionBa
         activityUIHelper.showContactRequestNotification(extras);
     }
 
-    public void forceRelogin() {
-        ErrorUtils.showError(this, getString(R.string.dlg_force_relogin_on_token_required));
-        SplashActivity.start(this);
-        finish();
-    }
-
-    public void refreshSession() {
-        if (LoginType.EMAIL.equals(AppSession.getSession().getLoginType())) {
-            QBLoginRestCommand.start(this, AppSession.getSession().getUser());
-        } else if (LoginType.FACEBOOK.equals(AppSession.getSession().getLoginType())){
-            QBSocialLoginCommand.start(this, QBProvider.FACEBOOK, AccessToken.getCurrentAccessToken().getToken(), null);
-        } else if (LoginType.TWITTER_DIGITS.equals(AppSession.getSession().getLoginType())){
-            refreshTDSession();
-        }
-    }
-
-    private void refreshTDSession() {
-        Map<String, String> authHeaders = TwitterDigitsHelper.retrieveCurrentAuthHeaders();
-        String tdServiceProvider = authHeaders.get(TwitterDigitsHelper.PROVIDER);
-        String tdCredentials = authHeaders.get(TwitterDigitsHelper.CREDENTIALS);
-        QBSocialLoginCommand.start(this, QBProvider.TWITTER_DIGITS, tdServiceProvider, tdCredentials);
-    }
-
     private Handler getHandler() {
         if (handler == null) {
             handler = new Handler();
@@ -592,14 +563,6 @@ public abstract class BaseActivity extends AppCompatActivity implements ActionBa
         }
     }
 
-    public void onReceiveForceReloginAction(Bundle extras) {
-        forceRelogin();
-    }
-
-    public void onReceiveRefreshSessionAction(Bundle extras) {
-        ToastUtils.longToast(R.string.dlg_refresh_session);
-        refreshSession();
-    }
 
     public void onReceiveContactRequestAction(Bundle extras) {
         if (needShowReceivedNotification()) {
@@ -625,13 +588,13 @@ public abstract class BaseActivity extends AppCompatActivity implements ActionBa
 
     private void checkOpeningDialog() {
         if (appSharedHelper.needToOpenDialog()) {
-            Dialog dialog = DataManager.getInstance().getDialogDataManager().getByDialogId(appSharedHelper.getPushDialogId());
+            QBChatDialog chatDialog = DataManager.getInstance().getQBChatDialogDataManager()
+                    .getByDialogId(appSharedHelper.getPushDialogId());
             QMUser user = QMUserService.getInstance().getUserCache().get((long)appSharedHelper.getPushUserId());
 
-            Log.d(TAG, "chatDialog for oppeneng by push: " + dialog + " user: " + user);
+            Log.d(TAG, "chatDialog for oppeneng by push: " + chatDialog + " user: " + user);
 
-            if (dialog != null && user != null) {
-                QBChatDialog chatDialog = ChatUtils.createQBDialogFromLocalDialog(DataManager.getInstance(), dialog);
+            if (chatDialog != null && user != null) {
                 Log.d(TAG, "chatDialog for oppeneng by push: " + chatDialog);
                 if (QBDialogType.PRIVATE.equals(chatDialog.getType())) {
                     startPrivateChatActivity(user, chatDialog);
@@ -745,8 +708,9 @@ public abstract class BaseActivity extends AppCompatActivity implements ActionBa
             boolean activeConnection = intent
                     .getBooleanExtra(NetworkChangeReceiver.EXTRA_IS_ACTIVE_CONNECTION, false);
 
+            checkShowingConnectionError();
+
             if (activeConnection) {
-                checkShowingConnectionError();
 
                 if (!loggedIn && LoginHelper.isCorrectOldAppSession()) {
                     loggedIn = true;
