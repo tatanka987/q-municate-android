@@ -362,6 +362,9 @@ ChatUtils {
         attachment.setRemoteUrl(remoteUrl);
         attachment.setName(qbAttachment.getName());
         attachment.setSize(qbAttachment.getSize());
+        attachment.setHeight(qbAttachment.getHeight());
+        attachment.setWidth(qbAttachment.getWidth());
+        attachment.setDuration(qbAttachment.getDuration());
         return attachment;
     }
 
@@ -490,6 +493,10 @@ ChatUtils {
     }
 
     private static String getAbbreviatedLastMessage(String fullMessage){
+        if (fullMessage == null){
+            return "";
+        }
+
         return fullMessage.substring(0,
                 fullMessage.length() > ConstsCore.LAST_MESSAGE_LENGTH
                         ? ConstsCore.LAST_MESSAGE_LENGTH

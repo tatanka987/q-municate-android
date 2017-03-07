@@ -31,7 +31,7 @@ ext {
     buildToolsVersion = '23.0.2'
     minSdkVersion = 15
     targetSdkVersion = 23
-    versionName = '2.1.11'
+    versionName = '2.1.12'
     versionCode = 220
 
     sourceCompatibility = JavaVersion.VERSION_1_7
@@ -41,8 +41,8 @@ ext {
     lintAbortOnError = false
 
 //    QuickBlox SDK version
-    qbSdkVersion = '3.3.1-alpha4'
-    qbMessageAdapterVersion = '1.1.0-alpha'
+    qbSdkVersion = '3.3.1-alpha6'
+    qbMessageAdapterVersion = '1.1.0-alpha1'
 
     testRunnerVersion = "0.4.1"
 
