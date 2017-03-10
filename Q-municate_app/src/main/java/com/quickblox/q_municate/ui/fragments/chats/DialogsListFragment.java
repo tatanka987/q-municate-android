@@ -332,37 +332,9 @@ public class DialogsListFragment extends BaseLoaderFragment<List<DialogWrapper>>
         if(chatDialog == null || chatDialog.getDialogId() == null){
             return;
         }
-        if (QBDialogType.GROUP.equals(chatDialog.getType())) {
-            if (chatHelper != null) {
-                try {
-                    QBChatDialog storeChatDialog = dataManager.getQBChatDialogDataManager().getByDialogId(chatDialog.getDialogId());
-                    if (storeChatDialog == null || storeChatDialog.getDialogId() == null){
-                        return;
-                    }
 
-                    ArrayList<Integer> actualOpponentsIds =
-                            ChatUtils.createOccupantsIdsFromDialogOccupantsList(dataManager.getDialogOccupantDataManager()
-                                    .getActualDialogOccupantsByDialog(storeChatDialog.getDialogId()));
-                    storeChatDialog.setOccupantsIds(actualOpponentsIds);
-                    storeChatDialog.initForChat(QBChatService.getInstance());
-
-                    if(!chatHelper.isDialogJoined(storeChatDialog)){
-                        ToastUtils.shortToast(R.string.error_cant_delete_chat);
-                        return;
-                    }
-
-                    List<Integer> occupantsIdsList = new ArrayList<>();
-                    occupantsIdsList.add(qbUser.getId());
-                    chatHelper.sendGroupMessageToFriends(
-                            storeChatDialog,
-                            DialogNotification.Type.OCCUPANTS_DIALOG, occupantsIdsList, true);
-                } catch (QBResponseException e) {
-                    ErrorUtils.logError(e);
-                }
-            }
-        }
         baseActivity.showProgress();
-        QBDeleteChatCommand.start(baseActivity, chatDialog.getDialogId());
+        QBDeleteChatCommand.start(baseActivity, chatDialog.getDialogId(), chatDialog.getType().getCode());
     }
 
     private void checkEmptyList(int listSize) {
@@ -415,8 +387,10 @@ public class DialogsListFragment extends BaseLoaderFragment<List<DialogWrapper>>
         @Override
         public void update(Observable observable, Object data) {
             if (data != null) {
-                if (data.equals(dataManager.getQBChatDialogDataManager().getObserverKey()) || data.equals(dataManager.getMessageDataManager().getObserverKey())
-                        || data.equals(QMUserCacheImpl.OBSERVE_KEY) || data.equals(dataManager.getDialogOccupantDataManager().getObserverKey())) {
+                if (data.equals(dataManager.getQBChatDialogDataManager().getObserverKey())
+                        || data.equals(dataManager.getMessageDataManager().getObserverKey())
+                        || data.equals(QMUserCacheImpl.OBSERVE_KEY)
+                        || data.equals(dataManager.getDialogOccupantDataManager().getObserverKey())) {
                     updateDialogsList();
                 }
             }
