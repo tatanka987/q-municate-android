@@ -10,6 +10,7 @@ import android.os.Looper;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.RecyclerView;
@@ -57,6 +58,7 @@ import com.quickblox.q_municate_db.managers.DialogDataManager;
 import com.quickblox.q_municate_db.managers.DialogNotificationDataManager;
 import com.quickblox.q_municate_db.managers.MessageDataManager;
 import com.quickblox.q_municate_db.models.Attachment;
+import com.quickblox.q_municate_db.models.Dialog;
 import com.quickblox.q_municate_db.models.DialogNotification;
 import com.quickblox.q_municate_db.models.DialogOccupant;
 import com.quickblox.q_municate_db.models.Message;
@@ -872,6 +874,11 @@ public abstract class BaseDialogActivity extends BaseLoggableActivity implements
             }
         }
     }
+    protected void notifyUpdatingDialog(String dialogId) {
+        Intent intent = new Intent(QBServiceConsts.UPDATE_DIALOG_CHANGED);
+        intent.putExtra(QBServiceConsts.EXTRA_DIALOG_ID, dialogId);
+        LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+    }
 
     private class DialogObserver implements Observer {
 
@@ -882,12 +889,19 @@ public abstract class BaseDialogActivity extends BaseLoggableActivity implements
                 String observerKey = ((Bundle) data).getString(DialogDataManager.EXTRA_OBSERVE_KEY);
                 if (observerKey.equals(dataManager.getQBChatDialogDataManager().getObserverKey()) && currentChatDialog != null) {
                     currentChatDialog = dataManager.getQBChatDialogDataManager().getByDialogId(currentChatDialog.getDialogId());
-                    if (currentChatDialog != null) {
-                        // need init current dialog after getting from DB
-                        initCurrentDialog();
-                        updateActionBar();
+
+                    final Dialog dialog = (Dialog) ((Bundle) data).getSerializable(DialogDataManager.EXTRA_OBJECT);
+                    if (dialog != null && !currentChatDialog.getDialogId().equals(dialog.getDialogId())) {
+                        Log.i(TAG, "==== DialogObserver  notifyUpdatingDialog ====");
+                        notifyUpdatingDialog(dialog.getDialogId());
                     } else {
-                        finish();
+                        if (currentChatDialog != null) {
+                            // need init current dialog after getting from DB
+                            initCurrentDialog();
+                            updateActionBar();
+                        } else {
+                            finish();
+                        }
                     }
                 }
             }

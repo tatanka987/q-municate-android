@@ -225,6 +225,7 @@ public class QBServiceConsts {
 
 
     public static final String UPDATE_DIALOG = "update_dialog";
+    public static final String UPDATE_DIALOG_CHANGED = "update_dialog_changed";
     public static final String UPDATE_DIALOG_DETAILS = "update_dialog_details";
     public static final String TYPING_MESSAGE = "typing_message";
     public static final String GOT_CHAT_MESSAGE = "q_municate.got_chat_message";

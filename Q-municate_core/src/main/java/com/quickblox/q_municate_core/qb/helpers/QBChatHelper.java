@@ -736,10 +736,10 @@ public class QBChatHelper extends BaseThreadPoolHelper{
         }
 
         boolean isPrivateChatMessage = QBDialogType.PRIVATE.equals(chatDialog.getType());
-        boolean needNotifyObserver = (currentDialog != null && currentDialog.getDialogId().equals(chatMessage.getDialogId()))
-                || currentDialog == null;
+        boolean needNotifyObserver, needNotifyUpdateDialog = ! (needNotifyObserver = (currentDialog != null && currentDialog.getDialogId().equals(chatMessage.getDialogId()))
+                || currentDialog == null);
 
-        DbUtils.updateDialogModifiedDate(dataManager, chatDialog, ChatUtils.getMessageDateSent(chatMessage), false);
+        DbUtils.updateDialogModifiedDate(dataManager, chatDialog, ChatUtils.getMessageDateSent(chatMessage), needNotifyUpdateDialog);
         DbUtils.saveMessageOrNotificationToCache(context, dataManager, dialogId, chatMessage,
                 !ownMessage
                         ? State.DELIVERED

@@ -1,11 +1,15 @@
 package com.quickblox.q_municate.ui.fragments.chats;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.v4.content.Loader;
+import android.support.v4.content.LocalBroadcastManager;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.ContextMenu;
@@ -90,6 +94,8 @@ public class DialogsListFragment extends BaseLoaderFragment<List<DialogWrapper>>
 
     protected Handler handler = new Handler();
     private State updateDialogsProcess;
+    private LocalBroadcastManager localBroadcastManager;
+    private BroadcastReceiver updatingDialogBroadcastReceiver;
 
     enum State {started, stopped}
 
@@ -108,7 +114,7 @@ public class DialogsListFragment extends BaseLoaderFragment<List<DialogWrapper>>
         initChatsDialogs();
 
         registerForContextMenu(dialogsListView);
-
+        registerBroadcastReceivers();
         return view;
     }
 
@@ -123,6 +129,8 @@ public class DialogsListFragment extends BaseLoaderFragment<List<DialogWrapper>>
     private void initFields() {
         dataManager = DataManager.getInstance();
         commonObserver = new CommonObserver();
+        localBroadcastManager = LocalBroadcastManager.getInstance(getContext());
+        updatingDialogBroadcastReceiver = new UpdatingDialogBroadcastReceiver();
         qbUser = AppSession.getSession().getUser();
     }
 
@@ -246,6 +254,7 @@ public class DialogsListFragment extends BaseLoaderFragment<List<DialogWrapper>>
 
         Log.d(TAG, "onDestroy() removeActions");
         removeActions();
+        unregisterBroadcastReceivers();
     }
 
     @Override
@@ -557,6 +566,26 @@ public class DialogsListFragment extends BaseLoaderFragment<List<DialogWrapper>>
         private boolean isLoadPerPage(Bundle bundle) {
             return bundle.get(ConstsCore.DIALOGS_START_ROW) != null && bundle.get(ConstsCore.DIALOGS_PER_PAGE) != null;
         }
+    }
+
+    private class UpdatingDialogBroadcastReceiver extends BroadcastReceiver {
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (intent.getStringExtra(QBServiceConsts.EXTRA_DIALOG_ID) != null) {
+                Log.d(TAG, "UpdatingDialogBroadcastReceiver dialogID= " + intent.getStringExtra(QBServiceConsts.EXTRA_DIALOG_ID));
+                updateOrAddDialog(intent.getStringExtra(QBServiceConsts.EXTRA_DIALOG_ID), true);
+            }
+        }
+    }
+
+    protected void registerBroadcastReceivers() {
+        localBroadcastManager.registerReceiver(updatingDialogBroadcastReceiver,
+                new IntentFilter(QBServiceConsts.UPDATE_DIALOG_CHANGED));
+    }
+
+    protected void unregisterBroadcastReceivers() {
+        localBroadcastManager.unregisterReceiver(updatingDialogBroadcastReceiver);
     }
 
     private class CommonObserver implements Observer {
