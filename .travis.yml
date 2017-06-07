@@ -28,9 +28,9 @@ android:
     - sys-img-armeabi-v7a-android-23
 #    - sys-img-armeabi-v7a-android-22
     # - sys-img-armeabi-v7a-android-17
-    licenses:
-      - 'android-sdk-license-.+'
 
+  licenses:
+    - 'android-sdk-license-.+'
 # Emulator Management: Create, Start and Wait
 #before_script:
 #      - echo no | android create avd --force -n test -t android-22 --abi armeabi-v7a
