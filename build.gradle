@@ -15,11 +15,7 @@ allprojects {
         jcenter()
 
         maven {
-            url = qbRepository
-            credentials {
-                username qbUser
-                password qbPassword
-            }
+            url = "https://github.com/QuickBlox/quickblox-android-sdk-releases/raw/master/"
         }
 
         maven { url 'https://maven.fabric.io/public' }
@@ -41,7 +37,7 @@ ext {
     lintAbortOnError = false
 
 //    QuickBlox SDK version
-    qbSdkVersion = '3.3.3-alpha2'
+    qbSdkVersion = '3.3.3'
     qbMessageAdapterVersion = '1.1.0'
 
     testRunnerVersion = "0.4.1"
