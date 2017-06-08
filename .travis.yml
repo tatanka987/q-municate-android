@@ -11,10 +11,11 @@ android:
     # - platform-tools
 
     # The BuildTools version used by your project
-    - build-tools-23.0.2
+    - build-tools-25.0.0
 
     # The SDK version used to compile your project
     - android-23
+    - android-25
 #    - android-22
 
     # Additional components
@@ -40,7 +41,7 @@ android:
 #      - adb shell input keyevent 82 &
 
 before_install:
-  - android update sdk --no-ui --filter build-tools-23.0.2,android-23,extra-android-m2repository
+  - android update sdk --no-ui --filter build-tools-25.0.0,android-25,extra-android-m2repository
 
 #after_install:
 #  - android update sdk --no-ui --filter build-tools-23.0.2,android-23,extra-android-m2repository
