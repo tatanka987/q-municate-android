@@ -7,7 +7,7 @@ android:
   components:
     # Uncomment the lines below if you want to
     # use the latest revision of Android SDK Tools
-#    - tools
+    - tools
 #    - platform-tools
 
     # The BuildTools version used by your project
@@ -46,7 +46,7 @@ android:
 #after_install:
 #  - android update sdk --no-ui --filter build-tools-23.0.2,android-23,extra-android-m2repository
 install:
-#  - echo y | android update sdk -u -a -t tools
+  - echo y | android update sdk -u -a -t tools
 #  - echo y | android update sdk -u -a -t platform-tools
   - echo y | android update sdk -u -a -t build-tools-23.0.2
   - echo y | android update sdk -u -a -t build-tools-24.0.2
