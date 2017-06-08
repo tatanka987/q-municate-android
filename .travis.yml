@@ -40,7 +40,10 @@ android:
 #      - adb shell input keyevent 82 &
 
 before_install:
-  - mkdir "$ANDROID_SDK/licenses" || true
+  - android update sdk --no-ui --filter build-tools-23.0.2,android-23,extra-android-m2repository
+
+#after_install:
+#  - android update sdk --no-ui --filter build-tools-23.0.2,android-23,extra-android-m2repository
 
 script:
   - ./gradlew build
