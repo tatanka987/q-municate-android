@@ -1,5 +1,5 @@
 # Keystore
-/keystore
+#/keystore
 
 # Application instances
-gradle.properties
+#gradle.properties
